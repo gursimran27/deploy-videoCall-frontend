@@ -17,13 +17,23 @@ const Player = (props) => {
       {playing ? (
         <ReactPlayer
           url={url}
-          muted={muted}
+          muted={me ? muted : true}
           playing={playing}
           width="100%"
           height="100%"
         />
       ) : (
+        <>
+        <ReactPlayer
+          url={url}
+          muted={me ? muted : true}
+          playing={true}
+          width="100%"
+          height="100%"
+          style={{display:'none'}}
+        />
         <UserSquare2 className={styles.user} size={isActive ? 400 : 150} />
+        </>
       )}
 
       <div className={styles.icon}>
