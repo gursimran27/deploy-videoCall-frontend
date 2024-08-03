@@ -14,7 +14,7 @@ export const SocketProvider = (props) => {
 
   useEffect(() => {
     // const connection = io();//monorepo so no server URL
-    const connection = io('http://localhost:5000');//monorepo so no server URL
+    const connection = io('https://deploy-videocall-backend.onrender.com');//monorepo so no server URL
     console.log("socket connection", connection)
     setSocket(connection);
   }, []);
