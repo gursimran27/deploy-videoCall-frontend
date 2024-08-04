@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { cloneDeep } from "lodash";
+import { useEffect, useRef, useState } from "react";
+import { cloneDeep, map } from "lodash";
 
 import { useSocket } from "@/context/socket";
 import usePeer from "@/hooks/usePeer";
@@ -16,7 +16,7 @@ import { UserSquare2 } from "lucide-react";
 
 const Room = () => {
   const socket = useSocket();
-  const router = useRouter()
+  const router = useRouter();
   const { roomId } = useRouter().query;
   const { peer, myId } = usePeer();
   const { stream } = useMediaStream();
@@ -32,22 +32,40 @@ const Room = () => {
 
   const [users, setUsers] = useState([]);
 
+  const playerRef = useRef(players);
+  const myIdRef = useRef(myId);
+
+  const ref = useRef(false);
+
+
+  useEffect(() => {
+    playerRef.current = players;
+    myIdRef.current = myId;
+  }, [players, myId ]);
+
   // call the joined person and send strams also and also receive the streams from him/her
   useEffect(() => {
     if (!socket || !peer || !stream) return;
     const handleUserConnected = (newUser) => {
-      console.log(`user connected in room with userId ${newUser}`);
+      // console.log(`user connected in room with userId ${newUser}`);
 
-      const call = peer.call(newUser, stream);
+      const call = peer.call(newUser, stream, {
+        metadata: {
+          muted: playerRef.current[myIdRef.current].muted,
+          playing: playerRef.current[myIdRef.current].playing,
+        },
+      });
 
       call.on("stream", (incomingStream) => {
-        console.log(`incoming stream from ${newUser}`);
+        // console.log(`incoming stream from ${newUser}`);
+        let muted = true;
+        let playing = true;
         setPlayers((prev) => ({
           ...prev,
           [newUser]: {
             url: incomingStream,
-            muted: true,
-            playing: true,
+            muted: muted,
+            playing: playing,
           },
         }));
 
@@ -55,6 +73,7 @@ const Room = () => {
           ...prev,
           [newUser]: call,
         }));
+        ref.current = true;
       });
     };
     socket.on("user-connected", handleUserConnected);
@@ -67,7 +86,7 @@ const Room = () => {
   useEffect(() => {
     if (!socket) return;
     const handleToggleAudio = (userId) => {
-      console.log(`user with id ${userId} toggled audio`);
+      // console.log(`user with id ${userId} toggled audio`);
       setPlayers((prev) => {
         const copy = cloneDeep(prev);
         copy[userId].muted = !copy[userId].muted;
@@ -76,7 +95,7 @@ const Room = () => {
     };
 
     const handleToggleVideo = (userId) => {
-      console.log(`user with id ${userId} toggled video`);
+      // console.log(`user with id ${userId} toggled video`);
       setPlayers((prev) => {
         const copy = cloneDeep(prev);
         copy[userId].playing = !copy[userId].playing;
@@ -85,7 +104,7 @@ const Room = () => {
     };
 
     const handleUserLeave = (userId) => {
-      console.log(`user ${userId} is leaving the room`);
+      // console.log(`user ${userId} is leaving the room`);
       users[userId]?.close(); //as users contain the call obj
       const playersCopy = cloneDeep(players);
       delete playersCopy[userId];
@@ -104,21 +123,26 @@ const Room = () => {
     };
   }, [players, setPlayers, socket, users]);
 
+
   // the receiver answer calls and send its streams also
   useEffect(() => {
     if (!peer || !stream) return;
     peer.on("call", (call) => {
       const { peer: callerId } = call;
+      const muted = call.metadata.muted;
+      const playing = call.metadata.playing;
+
+
       call.answer(stream); //send streams also
 
       call.on("stream", (incomingStream) => {
-        console.log(`incoming stream from ${callerId}`);
+        // console.log(`incoming stream from ${callerId}`);
         setPlayers((prev) => ({
           ...prev,
           [callerId]: {
             url: incomingStream,
-            muted: true,
-            playing: true,
+            muted: muted,
+            playing: playing,
           },
         }));
 
@@ -126,6 +150,8 @@ const Room = () => {
           ...prev,
           [callerId]: call,
         }));
+
+        ref.current = true;
       });
     });
   }, [peer, setPlayers, stream]);
@@ -133,7 +159,7 @@ const Room = () => {
   // opening streams of current user
   useEffect(() => {
     if (!stream || !myId) return;
-    console.log(`setting my stream ${myId}`);
+    // console.log(`setting my stream ${myId}`);
     setPlayers((prev) => ({
       ...prev,
       [myId]: {
@@ -199,6 +225,8 @@ const Room = () => {
         toggleAudio={toggleAudio}
         toggleVideo={toggleVideo}
         leaveRoom={leaveRoom}
+        clickable={ref.current}
+        players={players}
       />
     </>
   );

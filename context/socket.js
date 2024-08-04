@@ -14,14 +14,19 @@ export const SocketProvider = (props) => {
 
   useEffect(() => {
     // const connection = io();//monorepo so no server URL
-    const connection = io('https://deploy-videocall-backend.onrender.com');//monorepo so no server URL
+    const isDev = process.env.NODE_ENV === 'development';
+    const URL = isDev ? 'http://localhost:5000' : 'https://deploy-videocall-backend.onrender.com'
+    const connection = io(URL);
     console.log("socket connection", connection)
     setSocket(connection);
   }, []);
 
   socket?.on('connect_error', async (err) => { // as this is a monorepo so expicitly called API
     console.log("Error establishing socket", err)
-    await fetch('/api/socket')
+    // await fetch('/api/socket')
+    const connection = io(URL);
+    // console.log("socket connection", connection)
+    setSocket(connection);
   })
 
   return (
