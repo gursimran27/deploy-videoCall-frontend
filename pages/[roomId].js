@@ -48,11 +48,10 @@ const Room = () => {
   const ref = useRef(false);
   const ref2 = useRef(false);
 
-
   useEffect(() => {
     playerRef.current = players;
     myIdRef.current = myId;
-    openPaintref.current = openPaint
+    openPaintref.current = openPaint;
   }, [players, myId, openPaint]);
 
   // call the joined person and send strams also and also receive the streams from him/her
@@ -65,7 +64,7 @@ const Room = () => {
         metadata: {
           muted: playerRef.current[myIdRef.current].muted,
           playing: playerRef.current[myIdRef.current].playing,
-          isOpened: openPaintref.current
+          isOpened: openPaintref.current,
         },
       });
 
@@ -144,12 +143,11 @@ const Room = () => {
       const muted = call.metadata.muted;
       const playing = call.metadata.playing;
       const isOpened = call.metadata.isOpened;
-      
-      dispatch(toggleOpenpaint({open: isOpened}));
-      
+
+      dispatch(toggleOpenpaint({ open: isOpened }));
+
       call.answer(stream); //send streams also
 
-      
       call.on("stream", (incomingStream) => {
         // console.log(`incoming stream from ${callerId}`);
         setPlayers((prev) => ({
@@ -169,7 +167,7 @@ const Room = () => {
         ref.current = true;
       });
     });
-  }, [peer, setPlayers, stream]);
+  }, [peer, setPlayers, stream, dispatch]);
 
   // opening streams of current user
   useEffect(() => {
@@ -192,7 +190,7 @@ const Room = () => {
     if (!socket) return;
 
     const handleTooglePaint = (isOpened) => {
-      dispatch(toggleOpenpaint({open: isOpened}));
+      dispatch(toggleOpenpaint({ open: isOpened }));
     };
 
     socket.on("handleTooglePaint", handleTooglePaint);
@@ -269,6 +267,7 @@ const Room = () => {
             const { url, muted, playing } = nonHighlightedPlayers[playerId];
             return (
               <ReactPlayer
+                key={playerId}
                 url={url}
                 muted={muted}
                 playing={true}
