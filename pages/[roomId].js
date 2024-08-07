@@ -184,7 +184,7 @@ const Room = () => {
     }));
   }, [myId, setPlayers, stream]);
 
-  console.log(playerHighlighted);
+  // console.log(playerHighlighted);
 
   useEffect(() => {
     if (!socket) return;
