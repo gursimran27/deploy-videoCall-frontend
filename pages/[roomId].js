@@ -200,7 +200,7 @@ const Room = () => {
     return () => {
       socket.off("handleTooglePaint", handleTooglePaint);
     };
-  }, [socket]);
+  }, [socket, dispatch]);
 
   return (
     <>
